@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/blog/pkg/metrics"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,6 +26,21 @@ func init() {
 		},
 	}
 	logrus.SetFormatter(formatter)
+}
+
+// MyHookImpL implements function Fire() for the logrus.Hook interface
+type MyHookImpL struct {
+}
+
+// Levels sets log levels on which function Fire will be run
+func (l *MyHookImpL) Levels() []logrus.Level {
+	return []logrus.Level{logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel}
+}
+
+// Fire adds error metrics counter for levels: ErrorLevel, FatalLevel and PanicLevel
+func (l *MyHookImpL) Fire(entry *logrus.Entry) error {
+	metrics.ErrorInc()
+	return nil
 }
 
 func formatFilePath(path string) string {
