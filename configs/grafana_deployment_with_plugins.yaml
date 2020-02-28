@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: kube-system
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - image: grafana/grafana:latest
+          name: grafana
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: "michaeldmoore-multistat-panel, grafana-piechart-panel" # List of plugins
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 3000
+          volumeMounts:
+            - name: grafana-dash-config
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-templates
+              mountPath: /var/lib/grafana/dashboards
+            - name: grafana-source-config
+              mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+        - name: grafana-source-config
+          configMap:
+            name: grafana-source-config
+        - name: grafana-dash-config
+          configMap:
+            name: grafana-dashboard-config
+        - name: dashboard-templates
+          configMap:
+            name: grafana-dashboards
